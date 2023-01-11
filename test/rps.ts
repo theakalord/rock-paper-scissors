@@ -10,7 +10,7 @@ import {
   MockLink__factory,
   VRFCoordinatorMock,
   VRFCoordinatorMock__factory,
-} from "../types";
+} from "../typechain";
 
 describe("RPS", function () {
   let rps: RPS;
@@ -23,7 +23,7 @@ describe("RPS", function () {
 
   const vrfKeyHash =
     "0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4";
-  const vrfFee = "100000000000000000";
+  const vrfFee = utils.parseEther("0.1");
 
   before("Deploy", async function () {
     [admin, alice, bob] = await ethers.getSigners();
@@ -214,18 +214,20 @@ describe("RPS", function () {
       expect(await rps.claimable(alice.address)).to.be.eq(bet);
     });
 
-    it("cannot claim more than claimable", async function () {
-      const amount = bet.add(1);
-      await expect(rps.connect(alice).claim(amount))
-        .to.be.revertedWithCustomError(rps, "InsufficientClaimable")
-        .withArgs(amount);
-    });
+    describe("cannot claim", function () {
+      it("when claim more than claimable", async function () {
+        const amount = bet.add(1);
+        await expect(rps.connect(alice).claim(amount))
+          .to.be.revertedWithCustomError(rps, "InsufficientClaimable")
+          .withArgs(amount);
+      });
 
-    it("when balance is not enough", async function () {
-      const amount = bet;
-      await expect(
-        rps.connect(alice).claim(amount)
-      ).to.be.revertedWithCustomError(rps, "InsufficientBalance");
+      it("when balance is not enough", async function () {
+        const amount = bet;
+        await expect(
+          rps.connect(alice).claim(amount)
+        ).to.be.revertedWithCustomError(rps, "InsufficientBalance");
+      });
     });
 
     it("claim amount", async function () {
